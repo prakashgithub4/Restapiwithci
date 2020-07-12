@@ -9,7 +9,7 @@ class Example extends CI_Controller
 	{
 		parent::__construct();
 
-		//load user model
+
 		$this->load->model('user');
 	}
 	public function index()
@@ -57,12 +57,18 @@ class Example extends CI_Controller
 			$error['phone'] = "phone is required";
 			$flag = false;
 		}
+		$data['image'] = $this->do_upload('image', './assets/');
+		if (empty($data['image'])) {
+
+			$error['image'] = "phone is required";
+			$flag = false;
+		}
 		if ($flag == false) {
 			header('Content-Type: application/json');
 			$data = ["message" => "error", "data" => [], 'error' => $error];
 			echo json_encode($data, 400);
 		} else {
-
+			$data['status'] = 1;
 			$user_info = $this->db->insert('users', $data);
 			header('Content-Type: application/json');
 			$data = [
@@ -71,5 +77,39 @@ class Example extends CI_Controller
 			];
 			echo json_encode($data, 200);
 		}
+	}
+
+	public function do_upload($image, $path)
+	{
+
+		$config['upload_path']          = $path;
+		$config['allowed_types']        = 'gif|jpg|png';
+		$config['max_size']             = 1024;
+		$config['max_width']            = 1024;
+		$config['max_height']           = 768;
+		$new_name = time();
+		$config['file_name'] = $new_name;
+
+
+		$this->load->library('upload', $config);
+
+		if ($this->upload->do_upload($image)) {
+			$data = array($this->upload->data());
+			$file_name = $data[0]['file_name'];
+			$location = $path . $file_name;
+			$base64 = $this->convertimagetobase64($location);
+			return  $base64;
+		}
+	}
+
+	/* base64 convertion*/
+
+	public function convertimagetobase64($pathdata)
+	{
+		$path = $pathdata;
+		$type = pathinfo($path, PATHINFO_EXTENSION);
+		$data = file_get_contents($path);
+		$base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+		return $base64;
 	}
 }
