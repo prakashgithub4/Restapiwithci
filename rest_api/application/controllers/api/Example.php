@@ -14,18 +14,39 @@ class Example extends CI_Controller
 	}
 	public function index()
 	{
-		$this->db->select('*');
-		$query = $this->db->get('users');
-		header('Content-Type: application/json');
-		$data = [
-			"msg" => 'Data fetch successfully',
-			'data' => $query->result_array(),
-			'status' => 200
-		];
+		if ($this->input->server('REQUEST_METHOD') == 'GET'){
+			
+			$this->db->select('*');
+			$query = $this->db->get('users');
+			header("Access-Control-Allow-Origin: *");
+			header("Content-Type: application/json; charset=UTF-8");
+			header("HTTP/1.1 200 Ok");
+			$data = [
+				"msg" => 'Data fetch successfully',
+				'data' => $query->result_array(),
+				'status' => 200
+			];
+		}
+		else
+		{
+			header("Access-Control-Allow-Origin: *");
+			header("Content-Type: application/json; charset=UTF-8");
+			header("HTTP/1.1 405 Method Not Allowed");
+		   
+			$data = [
+				"msg" => '',
+				"error"=>"method not allowed",
+				'data' => [],
+				'status' => 405
+			];
+           
+		}
+	
 		echo json_encode($data);
 	}
 	public function store()
 	{
+		if ($this->input->server('REQUEST_METHOD') == 'POST'){
 		$error = [];
 		$flag = true;
 		$data['first_name'] = $this->input->post('fname');
@@ -64,19 +85,40 @@ class Example extends CI_Controller
 			$flag = false;
 		}
 		if ($flag == false) {
-			header('Content-Type: application/json');
+			header("Access-Control-Allow-Origin: *");
+			header("Content-Type: application/json; charset=UTF-8");
+			header("HTTP/1.1 400 Bad Request");
 			$data = ["message" => "error", "data" => [], 'error' => $error];
-			echo json_encode($data, 400);
+			echo json_encode($data);
 		} else {
 			$data['status'] = 1;
 			$user_info = $this->db->insert('users', $data);
-			header('Content-Type: application/json');
+			//header('Content-Type: application/json');
+			header("Access-Control-Allow-Origin: *");
+			header("Content-Type: application/json; charset=UTF-8");
+			header("HTTP/1.1 200 OK");
+
+			
 			$data = [
 				"message" => "data Save successfully",
 				"status" => $user_info
 			];
-			echo json_encode($data, 200);
+		
 		}
+	}
+	else{
+		header("Access-Control-Allow-Origin: *");
+		header("Content-Type: application/json; charset=UTF-8");
+		header("HTTP/1.1 405 Method not Allowed");
+
+		$data = [
+			"message" => "method not Allowed",
+			"status" =>405
+		];
+		
+	}	
+	echo json_encode($data);
+
 	}
 
 	public function do_upload($image, $path)
